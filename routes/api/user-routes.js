@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { route } = require('.');
-const { User, Post, Vote } = require("../../models");
+const { User, Post, Vote, Comment } = require("../../models");
 
 //get /api/users
 router.get('/', (req, res) => {
@@ -27,14 +27,23 @@ router.get('/:id', (req, res) => {
                 model: Post,
                 attributes: ['id', 'title', 'post_url', 'created_at']
             },
+            // include the Comment model here:
+            {
+                model: Comment,
+                attributes: ['id', 'comment_text', 'created_at'],
+                include: {
+                    model: Post,
+                    attributes: ['title']
+                }
+            },
             {
                 model: Post,
                 attributes: ['title'],
                 through: Vote,
                 as: 'voted_posts'
-              }
+            }
         ]
- 
+
     })
         .then(dbUserData => {
             if (!dbUserData) {
@@ -70,7 +79,7 @@ router.post('/login', (req, res) => {
             email: req.body.email
         }
     }).then(dbUserData => {
-        if(!dbUserData){
+        if (!dbUserData) {
             res.status(400).json({ message: 'No user with that email address!' });
             return;
         }
@@ -81,9 +90,9 @@ router.post('/login', (req, res) => {
         if (!validPassword) {
             res.status(400).json({ message: 'Incorrect password!' });
             return;
-          }
-          
-          res.json({ user: dbUserData, message: 'You are now logged in!' });
+        }
+
+        res.json({ user: dbUserData, message: 'You are now logged in!' });
     })
 })
 // PUT /api/users/1
